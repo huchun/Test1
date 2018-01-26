@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -23,6 +22,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.hucc.test1.mode.MusicInfo;
 import com.hucc.test1.util.MusicUtil;
 
 import java.util.ArrayList;
@@ -30,15 +30,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static com.hucc.test1.MusicInfo.CYCLE;
-import static com.hucc.test1.MusicInfo.CYCLE_LIST;
-import static com.hucc.test1.MusicInfo.CYCLE_RANDOM;
-import static com.hucc.test1.MusicInfo.MSG;
-import static com.hucc.test1.MusicInfo.MSG_CONTINUEPLAYING;
-import static com.hucc.test1.MusicInfo.MSG_PAUSE;
-import static com.hucc.test1.MusicInfo.MSG_PLAY;
+import static com.hucc.test1.mode.MusicInfo.CYCLE;
+import static com.hucc.test1.mode.MusicInfo.CYCLE_LIST;
+import static com.hucc.test1.mode.MusicInfo.CYCLE_RANDOM;
+import static com.hucc.test1.mode.MusicInfo.MSG;
+import static com.hucc.test1.mode.MusicInfo.MSG_CONTINUEPLAYING;
+import static com.hucc.test1.mode.MusicInfo.MSG_PAUSE;
+import static com.hucc.test1.mode.MusicInfo.MSG_PLAY;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, MusicService.Callbacks{
+public class MainActivity extends  BaseActivity  implements View.OnClickListener, MusicService.Callbacks{
 
     public static final String TAG = "MainActivity";
 
@@ -71,19 +71,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                   Log.d(TAG, "receive broadcast:next song");
                   //  autoChangeSong();
               }else if (action.equals("action.pre")){
-
+                    pre();
               }else if (action.equals("action.play")){
                     play();
               }else if (action.equals("action.pause")){
                     pause();
               }else if (action.equals("action.next")){
-
+                    next();
              // }else if (action.equals("action.refreshMusicList")){
              //     Log.d(TAG, "receive action.refreshMusicList");
                  // mListView.setAdapter(mAdapter);
                  // refresh();
               }else if (action.equals("action.exit")){
-
+                   CloseApplication();
             //  }else if (action.equals("action.startMainActivity")){
              //     Log.d(TAG,"startMainActivity");
                  // Intent intent1 = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
@@ -97,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onItemSelected(Integer id) {
         Log.d(TAG, "onItemSelected");
-        isPlaying = false;
+        MusicInfo.playMusic = false;
         firstPlay = true;
         notifyPlayService();
     }
@@ -126,10 +126,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         mAdapter = new MusicListAdapter(this, dbMusic);
         mListView.setAdapter(mAdapter);
-
-        initReceiver();
-        ServiceIntent = new Intent(MainActivity.this, MusicService.class);
-        startService(ServiceIntent);
 
         mCallback = (MusicService.Callbacks) MainActivity.this;
     }
@@ -170,10 +166,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.main_play:
-
+                MainPlayActvity();
                 break;
             case R.id.prebutton:
-
+                   pre();
                 break;
             case R.id.playtopause:
                     if (isPlaying) {
@@ -183,9 +179,55 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 break;
             case R.id.nextbutton:
-
+                   next();
                 break;
         }
+    }
+
+    private void MainPlayActvity() {
+        Log.d(TAG, "MainPlayActvity");
+        Intent intent = new Intent(MainActivity.this, MainPlayActivity.class);
+        startActivity(intent);
+    }
+
+    private void pre() {
+        Log.d(TAG, "pre");
+        if (dbMusic.size() == 0)
+            return;
+        if (MusicInfo.playMusic)
+            MusicInfo.playMusic = false;
+         if (MusicInfo.CYCLE == MusicInfo.CYCLE_RANDOM){
+              currentMusicPosition = new Random().nextInt(dbMusic.size()-1);
+         }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_SINGLE || MusicInfo.CYCLE == MusicInfo.CYCLE_LIST){
+               if (currentMusicPosition == 0){
+                   currentMusicPosition = dbMusic.size() - 1;
+               }else{
+                    currentMusicPosition--;
+               }
+         }
+         isPlaying = true;
+         MSG = MSG_PLAY;
+         notifyPlayService();
+    }
+
+    private void next() {
+        Log.d(TAG, "next");
+        if (dbMusic.size() == 0)
+            return;
+        if (MusicInfo.playMusic)
+            MusicInfo.playMusic = false;
+        if (MusicInfo.CYCLE == MusicInfo.CYCLE_RANDOM){
+            currentMusicPosition = new Random().nextInt(dbMusic.size()-1);
+        }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_SINGLE || MusicInfo.CYCLE == MusicInfo.CYCLE_LIST){
+            if (currentMusicPosition == 0){
+                currentMusicPosition = dbMusic.size() - 1;
+            }else{
+                currentMusicPosition++;
+            }
+        }
+        isPlaying = true;
+        MSG = MSG_PLAY;
+        notifyPlayService();
     }
 
     private void pause() {
@@ -212,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      */
     private void notifyPlayService() {
         Log.d(TAG, "notifyPlayService");
-        if (!isPlaying){
+        if (!MusicInfo.playMusic){
             Toast.makeText(this, "notify play service" + "position = " + currentMusicPosition , Toast.LENGTH_SHORT).show();
             Log.d(TAG, "dbMusic.size() = " + dbMusic.size());
             if (dbMusic.size() == 0){
@@ -244,15 +286,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (isPlaying){
             mPlayImageButton.setImageResource(android.R.drawable.ic_media_pause);
-           // mTxtMusic.setText(currentMusicTitle + "-" + currentMusicArtist);
             TranslateAnimation animation = new TranslateAnimation(-mPlayView.getWidth()-mTxtMusic.getWidth(),-mTxtMusic.getWidth(), 0, 0);
             animation.setDuration(10000);
             animation.setRepeatCount(Animation.INFINITE);
             animation.setRepeatMode(Animation.RESTART);
         }else{
             mPlayImageButton.setImageResource(android.R.drawable.ic_media_play);
-
-           // mTxtMusic.setText(currentMusicTitle + "-" + currentMusicArtist);
             mTxtMusic.clearAnimation();
         }
     }
@@ -309,6 +348,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
+        initReceiver();
+        ServiceIntent = new Intent(MainActivity.this, MusicService.class);
+        startService(ServiceIntent);
     }
 
     @Override
@@ -330,6 +372,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.stopService(ServiceIntent);
         isPlaying = false;
         super.onDestroy();
+    }
+
+    private void CloseApplication() {
+         MainActivity.this.finish();
     }
 
     /*

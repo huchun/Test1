@@ -1,64 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
-    android:orientation="horizontal"
-    android:id="@+id/main_play"
-    android:layout_alignParentBottom="true"
-    android:alpha="0.7"
-    android:background="@android:color/holo_green_dark">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:id="@+id/mainplay"
+    android:background="@drawable/main_media_play" >
 
-    <ImageView
-        android:id="@+id/playtag"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:gravity="left"
-        android:layout_gravity="center"
-        android:layout_marginLeft="2dp"
-        android:src="@android:mipmap/sym_def_app_icon" />
+        android:layout_weight="4"
+        android:gravity="center|top" android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/songmusic"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="3"
-        android:gravity="center_vertical"
-        android:singleLine="true"
-        android:ellipsize="marquee"
-        android:scrollHorizontally="true"
-        android:focusable="true" />
+        <TextView
+            android:id="@+id/title1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/colorAccent" />
 
-    <ImageButton
-        android:id="@+id/prebutton"
-        android:layout_width="0dp"
+        <TextView
+            android:id="@+id/artist1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/colorPrimary" />
+
+    </LinearLayout>
+
+    <include
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="left"
-        android:layout_gravity="center"
-        android:src="@android:drawable/ic_media_previous"
-        android:layout_weight="1"
-        android:background="#dd00dd"/>
-
-    <ImageButton
-        android:id="@+id/playtopause"
-        android:layout_width="0dp"
+        android:layout_weight="80"
+        layout="@layout/layout_main_picture" />
+    <include
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:gravity="left"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:background="#dd00dd"
-        android:src="@android:drawable/ic_media_play" />
+        android:layout_weight="10"
+        layout="@layout/layout_seekbar"/>
 
-    <ImageButton
-        android:id="@+id/nextbutton"
-        android:layout_width="0dp"
+    <include
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginRight="10dp"
-        android:gravity="left"
-        android:layout_gravity="center"
-        android:layout_weight="1"
-        android:background="#dd00dd"
-        android:src="@android:drawable/ic_media_next" />
+        android:layout_weight="5"
+        layout="@layout/layout_control_status"/>
+    
 </LinearLayout>

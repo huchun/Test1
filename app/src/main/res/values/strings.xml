@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Music</string>
+    <string name="sele_lrc">select_lrc</string>
+    <string name="init_time">00:00</string>
 </resources>

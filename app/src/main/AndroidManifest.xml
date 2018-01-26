@@ -24,6 +24,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".MainPlayActivity"
+                   android:configChanges="orientation|screenSize"
+                   android:exported="true">
+        </activity>
+
         <service android:name=".MusicService">
 
         </service>

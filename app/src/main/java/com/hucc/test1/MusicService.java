@@ -15,10 +15,10 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.hucc.test1.MusicInfo.MSG;
-import static com.hucc.test1.MusicInfo.MSG_CONTINUEPLAYING;
-import static com.hucc.test1.MusicInfo.MSG_PAUSE;
-import static com.hucc.test1.MusicInfo.MSG_PLAY;
+import static com.hucc.test1.mode.MusicInfo.MSG;
+import static com.hucc.test1.mode.MusicInfo.MSG_CONTINUEPLAYING;
+import static com.hucc.test1.mode.MusicInfo.MSG_PAUSE;
+import static com.hucc.test1.mode.MusicInfo.MSG_PLAY;
 
 /**
  * Created by chunchun.hu on 2018/1/18.
