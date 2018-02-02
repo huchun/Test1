@@ -2,6 +2,7 @@ package com.hucc.test1.util;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -14,6 +15,9 @@ import java.util.Map;
  * Created by chunchun.hu on 2018/1/17.
  */
 public class MusicUtil {
+
+    public static String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/musicplayer/albumPic/" + MainActivity.currentMusicTitle + "-" + MainActivity.currentMusicArtist + ".jpg";
+    public static String localUrl = Environment.getExternalStorageDirectory().getAbsolutePath() + "/musicplayer/lrc/" + MainActivity.currentMusicTitle + MainActivity.currentMusicArtist + "lrc";
 
     public static void getMp3Info(Context context) {
         if (MainActivity.dbMusic.size() > 0)
@@ -102,5 +106,49 @@ public class MusicUtil {
             sec = "0000" + (time % (1000 * 60)) + "";
         }
         return min + ":" + sec.trim().substring(0,2);
+    }
+
+    /*
+     * music play start time
+     */
+    public static String formatPlayTime(int time) {
+        int allsecond = time / 1000;
+        String minute = allsecond / 60 + "";
+        if (minute.length() < 2){
+            minute = "0" + minute;
+        }
+        String second = allsecond % 60 + "";
+        if (second.length() < 2){
+            second = "0" + second;
+        }
+        return minute + ":" + second;
+    }
+
+    /*
+     * music play duration time
+     */
+    public static String formatDuration(int duration) {
+        long totalSecond = duration / 1000;
+        String minute = totalSecond / 60 + "";
+        if (minute.length() < 2)
+            minute = "0" + minute;
+        String second = totalSecond % 60 + "";
+        if (second.length() < 2)
+            second = "0" + second;
+        return minute + ";" + second;
+    }
+
+    public static int translateToInt(String startTime) {
+        int allTime = 0;
+        String[] lines = startTime.split(":");
+        if (lines[0].startsWith("0") || lines[0].startsWith("1")){
+            allTime += Integer.parseInt(lines[0]) * 60 * 1000;
+        }else{
+             return 0;
+        }
+        String[] str = lines[1].split("\\.");
+        allTime += Integer.parseInt(str[0]) * 1000;
+        allTime += Integer.parseInt(str[1]) * 10;
+        return allTime;
     }
 }

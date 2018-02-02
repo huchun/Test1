@@ -98,7 +98,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
     public void onItemSelected(Integer id) {
         Log.d(TAG, "onItemSelected");
         MusicInfo.playMusic = false;
-        firstPlay = true;
+        //firstPlay = true;
         notifyPlayService();
     }
 
@@ -135,7 +135,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                currentMusicPosition = position;
-                //isPlaying = true;
+                isPlaying = true;
                 MusicInfo.MSG = MusicInfo.MSG_PLAY;
                 mCallback.onItemSelected(position);
             }
@@ -271,7 +271,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
         this.sendBroadcast(intent);
 
         refreshPlayState();
-        //notifyPlayActivity();
+        notifyMainPlayActivity();
     }
 
     /*
@@ -312,13 +312,13 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
         notifyPlayService();
     }
 
-    private void notifyPlayActivity() {
-        Log.d(TAG, "notifyPlayActivity");
+    private void notifyMainPlayActivity() {
+        Log.d(TAG, "notifyMainPlayActivity");
         Intent intent = new Intent();
         intent.putExtra("title",currentMusicTitle);
         intent.putExtra("artist",currentMusicArtist);
         intent.putExtra("duration",currentMusicDuration);
-        intent.setAction("action.notifyPlayActivity");
+        intent.setAction("action.notifyMainPlayActivity");
         this.sendBroadcast(intent);
     }
 
@@ -406,7 +406,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
 
         @Override
         public Object getItem(int position) {
-            return null;
+            return mListInfos.get(position);
         }
 
         @Override
