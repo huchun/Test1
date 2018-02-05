@@ -1,5 +1,6 @@
 package com.hucc.test1;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -21,6 +22,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.hucc.test1.mode.MusicInfo;
 import com.hucc.test1.util.MusicUtil;
@@ -32,6 +34,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -86,13 +90,25 @@ public class MainPlayActivity extends BaseActivity {
             Log.d(TAG, "msg");
             super.handleMessage(msg);
             if (msg.what == 0){
-
+               //  selectAlbumPic();
             }else if (msg.what == 1){
-
+               Log.d(TAG, "歌词下载完成!");
+               mLrcpicView.clearAnimation();
+               mLrcpicView.setVisibility(View.GONE);
+               mLrcTxtView.setVisibility(View.GONE);
+               showLrc = true;
+               mLrcListView.setVisibility(View.VISIBLE);
             }else if (msg.what == 2){
-
+               if (MainActivity.isPlaying && !showAlbum)
+                   mLrcpicView.startAnimation(mAnimation);
+                 mLrcpicView.setVisibility(View.VISIBLE);
+                 mLrcTxtView.setVisibility(View.VISIBLE);
+                 mLrcListView.setVisibility(View.GONE);
+                 showLrc = false;
             }else if (msg.what == 3){
-
+                if (!showLrc || musicList.size() == 0)
+                    return;
+                mLrcListView.invalidate();
             }else if (msg.what == 4){
 
             }
@@ -105,7 +121,18 @@ public class MainPlayActivity extends BaseActivity {
         public void run() {
             while (true){
                 while (currentLrcIndex < musicList.size() && showLrc){
-
+                     if (changeProgress)
+                         currentLrcIndex = 0;
+                         changeProgress = false;
+                         for (int i = currentLrcIndex; i < musicList.size(); i++){
+                             MusicInfo info = musicList.get(i);
+                             if(info == null)
+                                 return;
+                             if (info.getStartTime() < MainPlayActivity.playedMesicTime){
+                                 currentLrcIndex = i;
+                                 mHandler.sendEmptyMessage(3);
+                             }
+                         }
                 }
             }
         }
@@ -161,7 +188,7 @@ public class MainPlayActivity extends BaseActivity {
         mLrcTxtView.setOnClickListener(mOnClickListener);
         mStartView.setOnClickListener(mOnClickListener);
         mDurationView.setOnClickListener(mOnClickListener);
-        mPlayImageView.setOnClickListener(mOnClickListener);
+        mPreImageView.setOnClickListener(mOnClickListener);
         mPlayImageView.setOnClickListener(mOnClickListener);
         mNextImageView.setOnClickListener(mOnClickListener);
         mCycleImageView.setOnClickListener(mOnClickListener);
@@ -204,15 +231,16 @@ public class MainPlayActivity extends BaseActivity {
 
     public View.OnClickListener mOnClickListener =new  View.OnClickListener(){
 
+        @SuppressLint("WrongConstant")
         @Override
         public void onClick(View v) {
              Intent intent = new Intent();
              switch (v.getId()){
                  case R.id.lrcpic:
-
+                     searchAlbumPic();
                      break;
                  case R.id.lrcListTxtView:
-
+                     mHandler.sendEmptyMessage(2);
                      break;
                  case R.id.lrcTxtView:
                      File file = new File(MusicUtil.localUrl);
@@ -222,7 +250,10 @@ public class MainPlayActivity extends BaseActivity {
                     // downloadLrc(MainActivity.currentMusicTitle, MainActivity.currentMusicArtist);
                      break;
                  case R.id.preView:
-
+                     mSeekBar.setProgress(0);
+                     mStartView.setText("00:00");
+                     intent.setAction("action.pre");
+                     sendGB(intent);
                      break;
                  case R.id.playView:
                      if (MainActivity.isPlaying){
@@ -238,14 +269,49 @@ public class MainPlayActivity extends BaseActivity {
                      }
                      break;
                  case R.id.nextView:
-
+                     mSeekBar.setProgress(0);
+                     mStartView.setText("00:00");
+                     intent.setAction("action.next");
+                     sendGB(intent);
                      break;
                  case R.id.cycleView:
-
+                     if (MusicInfo.CYCLE == MusicInfo.CYCLE_LIST){
+                       MusicInfo.CYCLE = MusicInfo.CYCLE_RANDOM;
+                       mCycleImageView.setImageResource(R.mipmap.play_random);
+                       Toast.makeText(MainPlayActivity.this, "随机循环", 300).show();
+                     }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_RANDOM){
+                         MusicInfo.CYCLE = MusicInfo.CYCLE_SINGLE;
+                         mCycleImageView.setImageResource(R.mipmap.play_repeat_one);
+                         Toast.makeText(MainPlayActivity.this, "单曲循环", 300).show();
+                     }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_SINGLE){
+                         MusicInfo.CYCLE = MusicInfo.CYCLE_LIST;
+                         mCycleImageView.setImageResource(R.mipmap.play_list);
+                         Toast.makeText(MainPlayActivity.this, "列表循环", 300).show();
+                         updatePlayingUI();
+                     }
                      break;
              }
         }
     };
+
+    private void selectAlbumPic() {
+
+    }
+
+    private void searchAlbumPic() {
+         File file = new File(MusicUtil.path);
+         if (file.exists()){
+             return;
+         }
+        String searchTitle = null;
+        Log.d(TAG, MainActivity.currentMusicTitle + MainActivity.currentMusicArtist);
+        try {
+            searchTitle = URLEncoder.encode(MainActivity.currentMusicTitle, "UTF-8");
+            Log.d(TAG, searchTitle);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+    }
 
     private void showLrc(String path) {
           if (showLrc){
@@ -374,6 +440,16 @@ public class MainPlayActivity extends BaseActivity {
         intentFilter.addAction("action.notifyMainPlayActivity");
         intentFilter.addAction("action.refreshAlbum");
         registerReceiver(updateReceiver,intentFilter);
+
+        if (MusicInfo.CYCLE == MusicInfo.CYCLE_LIST){
+             mCycleImageView.setImageResource(R.mipmap.play_list);
+        }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_RANDOM){
+            mCycleImageView.setImageResource(R.mipmap.play_random);
+        }else if (MusicInfo.CYCLE == MusicInfo.CYCLE_SINGLE){
+            mCycleImageView.setImageResource(R.mipmap.play_repeat_one);
+        }
+
+        showAlbumPic();
     }
 
     private void changeLrc() {
@@ -428,7 +504,7 @@ public class MainPlayActivity extends BaseActivity {
                      mPlayImageView.setImageResource(R.mipmap.play);
                  }
              }else if (action.equals("action.destroy")){
-
+                   MainPlayActivity.this.onDestroy();
              }
         }
     };
