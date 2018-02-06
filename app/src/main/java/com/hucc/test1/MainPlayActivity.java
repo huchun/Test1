@@ -71,7 +71,7 @@ public class MainPlayActivity extends BaseActivity {
 
     private TextView  mTitleView = null;
     private TextView  mArtistView = null;
-    private ImageView mLrcpicView = null;
+    public static ImageView mLrcpicView = null;
     private LrcView   mLrcListView = null;
     private TextView  mLrcTxtView = null;
     private TextView  mStartView = null;
@@ -81,7 +81,7 @@ public class MainPlayActivity extends BaseActivity {
     private ImageView mPlayImageView = null;
     private ImageView mNextImageView = null;
     private ImageView mCycleImageView = null;
-    private Animation mAnimation;
+    public static Animation mAnimation;
     private GestureDetector mDetector;
 
     public Handler mHandler = new Handler(){

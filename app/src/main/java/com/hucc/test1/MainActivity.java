@@ -1,5 +1,8 @@
 package com.hucc.test1;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -48,9 +52,11 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
     public static String currentMusicUrl;
     public static int currentMusicPosition;
     public static int prePosition;
+    public int NOTIFICATION_ID = 123;
     public static List<Map<String, Object>> dbMusic = new ArrayList<Map<String, Object>>();
     public static boolean isPlaying = false;
     public static boolean firstPlay = true;
+    public boolean showNotification;
 
     private MusicService.Callbacks mCallback= null;
     private GestureDetector detector = null;
@@ -60,8 +66,12 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
     private TextView mEmptyTxt;
     private LinearLayout mLayoutplay;
     private ImageView    mPlayView;
-    private TextView   mTxtMusic;
+    private ImageView    mCloseView;
+    private TextView    mTxtMusic;
     private ImageButton mProImageButton, mPlayImageButton,mNextImageButton;
+    private NotificationManager mNotificationManager;
+    private RemoteViews mContentViews;
+    private Notification notification;
 
     private BroadcastReceiver completeReceiver = new BroadcastReceiver() {
         @Override
@@ -84,12 +94,12 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
                  // refresh();
               }else if (action.equals("action.exit")){
                    CloseApplication();
-            //  }else if (action.equals("action.startMainActivity")){
-             //     Log.d(TAG,"startMainActivity");
-                 // Intent intent1 = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-                //  context.sendBroadcast(intent1);
-                //  Intent intent2 = new Intent(MainActivity.this,MainActivity.class);
-                //  startActivity(intent2);
+              }else if (action.equals("action.startMainActivity")){
+                  Log.d(TAG,"startMainActivity");
+                  Intent intent1 = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                  context.sendBroadcast(intent1);
+                  Intent intent2 = new Intent(MainActivity.this,MainActivity.class);
+                  startActivity(intent2);
               }
         }
     };
@@ -111,6 +121,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
         mListView = findViewById(android.R.id.list);
         mEmptyTxt = findViewById(android.R.id.empty);
         initLayoutView();
+        initNotification();
         //if (dbMusic.size() > 0)
         //    dbMusic.clear();
         MusicUtil.getMp3Info(MainActivity.this);
@@ -146,6 +157,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
         mProImageButton = findViewById(R.id.prebutton);
         mPlayImageButton = findViewById(R.id.playtopause);
         mNextImageButton = findViewById(R.id.nextbutton);
+        //mCloseView = findViewById(R.id.closeView);
         mLayoutplay.setOnClickListener(this);
         mProImageButton.setOnClickListener(this);
         mPlayImageButton.setOnClickListener(this);
@@ -156,6 +168,59 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
                 return detector.onTouchEvent(event);
             }
         });*/
+    }
+
+    private void initNotification() {
+        mNotificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        notification = new Notification.Builder(this)
+                                     .setAutoCancel(true)
+                                     .setSmallIcon(R.mipmap.ic_launcher)
+                                     .setWhen(System.currentTimeMillis())
+                                     //.setContentIntent(pendingIntent)
+                                     .setOngoing(false)
+                                     .build();
+        notification.flags = notification.FLAG_NO_CLEAR;
+
+        mContentViews = new RemoteViews(getPackageName(),R.layout.layout_notification);
+
+        Intent intent = new Intent("action.startMainActivity");
+        PendingIntent pi = PendingIntent.getBroadcast(this, 0, intent,0);
+        mContentViews.setOnClickPendingIntent(R.id.playtag, pi);
+        mContentViews.setOnClickPendingIntent(R.id.songmusic,pi);
+
+        Intent preIntent = new Intent("action.pre");
+        PendingIntent prePendIntent = PendingIntent.getBroadcast(this,0,preIntent,0);
+        mContentViews.setOnClickPendingIntent(R.id.prebutton,prePendIntent);
+
+        Intent nextIntent = new Intent("action.next");
+        PendingIntent nextPendIntent = PendingIntent.getBroadcast(this,0,nextIntent,0);
+        mContentViews.setOnClickPendingIntent(R.id.nextbutton,nextPendIntent);
+
+        Intent exitIntent = new Intent("action.exit");
+        PendingIntent exitPendIntent = PendingIntent.getBroadcast(this,0,exitIntent,0);
+        mContentViews.setOnClickPendingIntent(R.id.closeView, exitPendIntent);
+    }
+
+    private void showNotification() {
+        showNotification = true;
+
+        if (isPlaying){
+              Intent playIntent = new Intent("action.pause");
+              PendingIntent playPendIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
+              MainPlayActivity.mLrcpicView.startAnimation(MainPlayActivity.mAnimation);
+              mContentViews.setOnClickPendingIntent(R.id.playtopause,playPendIntent);
+              mContentViews.setImageViewResource(R.id.playtopause, android.R.drawable.ic_media_pause);
+        }else {
+            Intent playIntent = new Intent("action.play");
+            PendingIntent playPendIntent = PendingIntent.getBroadcast(this, 0, playIntent, 0);
+            MainPlayActivity.mLrcpicView.clearAnimation();
+            mContentViews.setOnClickPendingIntent(R.id.playtopause,playPendIntent);
+            mContentViews.setImageViewResource(R.id.playtopause, android.R.drawable.ic_media_play);
+        }
+        mContentViews.setTextViewText(R.id.songmusic, currentMusicTitle + "-" + currentMusicArtist);
+        notification.contentView = mContentViews;
+
+        mNotificationManager.notify(NOTIFICATION_ID, notification);
     }
 
     /**
@@ -294,6 +359,9 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
             mPlayImageButton.setImageResource(android.R.drawable.ic_media_play);
             mTxtMusic.clearAnimation();
         }
+
+        if (showNotification)
+            showNotification();
     }
 
     private void autoChangeSong() {
@@ -345,6 +413,13 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
     }
 
     @Override
+    protected void onRestart() {
+        mNotificationManager.cancel(NOTIFICATION_ID);
+        showNotification = false;
+        super.onRestart();
+    }
+
+    @Override
     protected void onResume() {
         Log.i(TAG, "onResume");
         super.onResume();
@@ -362,6 +437,7 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
     @Override
     protected void onStop() {
         Log.i(TAG, "onStop");
+        showNotification();
         super.onStop();
     }
 
@@ -371,6 +447,8 @@ public class MainActivity extends  BaseActivity  implements View.OnClickListener
         unregisterReceiver(completeReceiver);
         this.stopService(ServiceIntent);
         isPlaying = false;
+        mNotificationManager.cancel(NOTIFICATION_ID);
+        showNotification = false;
         super.onDestroy();
     }
 

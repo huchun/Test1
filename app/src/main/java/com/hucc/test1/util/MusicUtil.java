@@ -1,7 +1,10 @@
 package com.hucc.test1.util;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -22,8 +25,11 @@ public class MusicUtil {
     public static void getMp3Info(Context context) {
         if (MainActivity.dbMusic.size() > 0)
              MainActivity.dbMusic.clear();
-        Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                null, null, null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+        ContentResolver resolver = context.getContentResolver();
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String sort = MediaStore.Audio.Media.DEFAULT_SORT_ORDER;
+        Cursor cursor = resolver.query(uri,null, null, null, sort);
+
         getMusic(cursor);
         /*List<MusicInfo> mListInfo = new ArrayList<MusicInfo>();
         for (int i = 0; i<cursor.getCount();i++){
